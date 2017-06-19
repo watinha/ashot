@@ -41,6 +41,7 @@ public class ViewportPastingDecorator extends ShootingDecorator {
         int pageHeight = getFullHeight(wd);
         int pageWidth = getFullWidth(wd);
         int viewportHeight = getWindowHeight(wd);
+        float dpi = -1;
         shootingArea = getShootingCoords(coordsSet, pageWidth, pageHeight, viewportHeight);
 
         BufferedImage finalImage = new BufferedImage(pageWidth, shootingArea.height, BufferedImage.TYPE_3BYTE_BGR);
@@ -51,7 +52,17 @@ public class ViewportPastingDecorator extends ShootingDecorator {
             scrollVertically(js, shootingArea.y + viewportHeight * n);
             waitForScrolling();
             BufferedImage part = getShootingStrategy().getScreenshot(wd);
-            graphics.drawImage(part, 0, getCurrentScrollY(js) - shootingArea.y, null);
+
+            if (dpi == -1) {
+                dpi = part.getWidth() / pageWidth;
+                finalImage = new BufferedImage(Math.round(pageWidth * dpi), Math.round(shootingArea.height * dpi), BufferedImage.TYPE_3BYTE_BGR);
+                graphics = finalImage.createGraphics();
+            }
+
+            if (dpi != -1)
+                graphics.drawImage(part, 0, Math.round((getCurrentScrollY(js) - shootingArea.y) * dpi), null);
+            else
+                graphics.drawImage(part, 0, getCurrentScrollY(js) - shootingArea.y, null);
         }
 
         graphics.dispose();
